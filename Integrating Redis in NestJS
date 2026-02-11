@@ -1,0 +1,39 @@
+Step 1: Install packages
+npm install cache-manager ioredis cache-manager-ioredis-yet
+
+Step 2: Import CacheModule in your module
+import { CacheModule } from '@nestjs/cache-manager';
+import { Module } from '@nestjs/common';
+import { redisStore } from 'cache-manager-ioredis-yet';
+
+@Module({
+  imports: [
+    CacheModule.registerAsync({
+      useFactory: async () => ({
+        store: await redisStore({
+          socket: {
+            host: '127.0.0.1',
+            port: 6379,
+          },
+        }),
+        ttl: 60, // default TTL in seconds
+      }),
+    }),
+  ]
+})
+export class AppModule {}
+
+Step 3: Inject cache and use it
+import { Injectable } from '@nestjs/common';
+import { Cache } from 'cache-manager';
+import { Inject } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  constructor(@Inject('CACHE_MANAGER') private cache: Cache) {}
+
+  async demo() {
+    await this.cache.set('name', 'hemal');
+    return await this.cache.get('name'); // "hemal"
+  }
+}
